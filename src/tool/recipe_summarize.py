@@ -4,6 +4,7 @@ from pathlib import Path
 from common.dao import RecipeDao
 from recipe_crawler import RecipeCrawler
 import psycopg2
+from common import config 
 
 # 実行中のスクリプトのディレクトリを取得
 script_dir = Path(__file__).resolve().parent
@@ -46,9 +47,9 @@ def main():
         recipe_list = cookpad_crawler.get_saved_list(page)
         
         # DBに接続
-        # connection = psycopg2.connect("user=postgres.kpeddfytmmiqjunxkqhx password=#Wyn5NtGvP2*B.r host=aws-0-ap-northeast-1.pooler.supabase.com port=5432 dbname=postgres")
+        # con = psycopg2.connect(config.DBPARAM)
         # DBに接続
-        con = psycopg2.connect("user=recipe_user password=pass host=localhost port=5432 dbname=my_recipe_db")
+        con = psycopg2.connect(config.LOCAL_DBPARAM)
         with con:        
             for recipe in recipe_list:
                 recipe_detail = cookpad_crawler.set_recipe_detail(recipe)

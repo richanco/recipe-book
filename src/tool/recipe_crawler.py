@@ -15,9 +15,7 @@ class RecipeCrawler:
         Returns:
             List[str]: _description_
         """
-        # レシピのurlを取得
-        url_list = []
-    
+        # レシピのurlを取得    
         recipe_list: List[Recipe] = []
 
         while True:   
@@ -33,7 +31,7 @@ class RecipeCrawler:
                 if href and (href.startswith('/jp/recipes/')):  # href が存在する場合のみ追加
                     menu = section_locator.nth(i).text_content().strip()  # 前後の空白を削除
                     img_url = page.get_by_role("img", name= menu).get_attribute("src")
-                    recipe_list.append(Recipe( menu,img_url, f"https://cookpad.com{href}"))
+                    recipe_list.append(Recipe( menu, img_url, f"https://cookpad.com{href}"))
                     
             next_link = page.get_by_role("link", name="次へ")        
 

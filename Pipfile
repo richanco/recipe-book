@@ -8,6 +8,8 @@ playwright = "==1.49.0"
 beautifulsoup4 = "*"
 requests = "*"
 psycopg2 = "*"
+flask = "*"
+python-dotenv = "*"
 
 [dev-packages]
 

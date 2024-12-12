@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>お気に入りのメニュー</title>    
+</head>
+<body>
+  <title>お気に入りのメニュー</title>
+  <ul>
+    {% for recipe in recipe_list %}
+        <li>{{ recipe["menu"] }}</li>  
+    {% endfor %}   
+  </ul>  
+</body>    
+</html>
