@@ -13,14 +13,15 @@ def recipe_search(*ingredient_name_args:str) -> List[dict]:
         List[dict]: _description_
     """    
     # データベースに接続
-    connection = psycopg2.connect(os.getenv("DB_PARAM"))
+    con = psycopg2.connect(os.getenv("DB_PARAM"))
         
-    with connection:
-        with connection.cursor() as cursor:
+    with con:
+        with con.cursor() as cursor:
             # 入力された材料名からレシピidとレシピ名を取得する
             sql = """SELECT 
                         recipe.id, 
-                        menu 
+                        menu,
+                        img_url
                     FROM recipe
                     INNER JOIN (
                         SELECT 
@@ -32,7 +33,8 @@ def recipe_search(*ingredient_name_args:str) -> List[dict]:
                         GROUP BY id
                     ) ingredient_count 
                     ON recipe.id = ingredient_count.id
-                    WHERE ingredient_count.cnt >= %s"""
+                    WHERE ingredient_count.cnt >= %s
+                    LIMIT 10"""
             
             # 材料名を正規表現で検索
             search_ingredient = '|'.join('(.*'+ ingredient_name + '.*)' for ingredient_name in ingredient_name_args)
@@ -50,7 +52,9 @@ def recipe_search(*ingredient_name_args:str) -> List[dict]:
                 recipe_id   = recipe[0]
                 # レシピ名取得
                 recipe_menu = recipe[1]
-
+                # レシピURL取得
+                img_url = recipe[2]
+                                
                 # 材料の抽出
                 ingredient_list = []
                 sql = """SELECT name, amount 
@@ -58,6 +62,7 @@ def recipe_search(*ingredient_name_args:str) -> List[dict]:
                        WHERE recipe_id = %s"""
                 # 実行処理
                 cursor.execute(sql, (recipe_id,))
+                
                 for ingredient in cursor:
                     dict_ingredient = {'name': ingredient[0], 'amount': ingredient[1]}
                     ingredient_list.append(dict_ingredient) 
@@ -76,6 +81,7 @@ def recipe_search(*ingredient_name_args:str) -> List[dict]:
                 # 辞書データに変換                
                 recipe_data = {
                     'menu': recipe_menu,
+                    'img_url': img_url,
                     'ingredients': ingredient_list,
                     'processes' : proc_list
                 }

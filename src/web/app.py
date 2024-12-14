@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request
-# import awsgi
+import awsgi
 from recipe_search import recipe_search
 from flask import render_template
 
@@ -18,9 +18,9 @@ def search():
     print(request_ingredients)
     return render_template('saved.html',recipe_list =recipe_search(*request_ingredients))
 
-# # この前に関数を定義
-# def lambda_handler(event,context):
-#     return awsgi.response(app,event,context)
+# この前に関数を定義
+def lambda_handler(event,context):
+    return awsgi.response(app,event,context)
 
 # Lambdaで実行しない場合に使用
-app.run()
+# app.run()
