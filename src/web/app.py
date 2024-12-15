@@ -18,9 +18,10 @@ def search():
     print(request_ingredients)
     return render_template('saved.html',recipe_list =recipe_search(*request_ingredients))
 
-# この前に関数を定義
+# この前に関数を定義すること
 def lambda_handler(event,context):
     return awsgi.response(app,event,context)
 
-# Lambdaで実行しない場合に使用
-# app.run()
+# ローカル環境で実行する場合
+if os.getenv('ENV') == 'local':
+    app.run(debug=True)

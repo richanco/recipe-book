@@ -10,6 +10,7 @@ requests = "*"
 psycopg2 = "*"
 flask = "*"
 python-dotenv = "*"
+awsgi = "*"
 
 [dev-packages]
 

@@ -34,7 +34,7 @@ def recipe_search(*ingredient_name_args:str) -> List[dict]:
                     ) ingredient_count 
                     ON recipe.id = ingredient_count.id
                     WHERE ingredient_count.cnt >= %s
-                    LIMIT 10"""
+                    """
             
             # 材料名を正規表現で検索
             search_ingredient = '|'.join('(.*'+ ingredient_name + '.*)' for ingredient_name in ingredient_name_args)
@@ -42,9 +42,7 @@ def recipe_search(*ingredient_name_args:str) -> List[dict]:
             cursor.execute(sql, (search_ingredient, len(ingredient_name_args)))
             
             # 取得したレシピをリストに一時退避
-            recipe_list = []
-            for recipe in cursor:
-                recipe_list.append(recipe)
+            recipe_list = cursor.fetchall()
 
             recipe_data_list = []
             for recipe in recipe_list:
