@@ -1,6 +1,7 @@
 import psycopg2
 import os
 from typing import List
+from itertools import groupby
 
 def recipe_search(*ingredient_name_args:str) -> List[dict]:
     """材料名からレシピデータを抽出する
@@ -17,35 +18,44 @@ def recipe_search(*ingredient_name_args:str) -> List[dict]:
         
     with con:
         with con.cursor() as cursor:
+            # 入力された材料名であいまい検索できるように設定
+            search_ingredient = [f'%{name}%' for name in ingredient_name_args]
+            join_list = ['ingredient.name LIKE %s' for _ in search_ingredient]
+                  
             # 入力された材料名からレシピidとレシピ名を取得する
-            sql = """SELECT 
-                        recipe.id, 
-                        menu,
-                        img_url
-                    FROM recipe
-                    INNER JOIN (
-                        SELECT 
-                            id, 
-                            COUNT(*) as cnt
+            sql = """   SELECT 
+                        recipe.id,
+                        recipe.menu,
+                        recipe.img_url,
+                        ingredient.name
                         FROM recipe
-                        INNER JOIN ingredient ON recipe.id = ingredient.recipe_id
-                        WHERE name ~ %s
-                        GROUP BY id
-                    ) ingredient_count 
-                    ON recipe.id = ingredient_count.id
-                    WHERE ingredient_count.cnt >= %s
-                    """
-            
-            # 材料名を正規表現で検索
-            search_ingredient = '|'.join('(.*'+ ingredient_name + '.*)' for ingredient_name in ingredient_name_args)
+                        INNER JOIN ingredient
+                        ON recipe.id = ingredient.recipe_id
+                        WHERE """ + ' OR '.join(join_list) 
+                                       
             # 実行処理
-            cursor.execute(sql, (search_ingredient, len(ingredient_name_args)))
+            cursor.execute(sql, search_ingredient)
             
             # 取得したレシピをリストに一時退避
-            recipe_list = cursor.fetchall()
-
+            temp_list = cursor.fetchall()
+            
+            # 同じidのレシピをグループ化
+            grouped = groupby(temp_list, key=lambda x: x[0])
+            
+            recipe_list = []
+            
+            # 指定材料を全て含むレシピのみを抽出
+            for key, group in grouped:
+                print(f'{key}:')
+                group_list = list(group)
+                if group_extraction(group_list, ingredient_name_args):
+                    recipe_list.append(group_list[0])
+                
+            # 検索する材料数以上を含む                      
             recipe_data_list = []
+            
             for recipe in recipe_list:
+                
                 # レシピID取得
                 recipe_id   = recipe[0]
                 # レシピ名取得
@@ -56,11 +66,10 @@ def recipe_search(*ingredient_name_args:str) -> List[dict]:
                 # 材料の抽出
                 ingredient_list = []
                 sql = """SELECT name, amount 
-                       FROM ingredient
-                       WHERE recipe_id = %s"""
+                    FROM ingredient
+                    WHERE recipe_id = %s"""
                 # 実行処理
                 cursor.execute(sql, (recipe_id,))
-                
                 for ingredient in cursor:
                     dict_ingredient = {'name': ingredient[0], 'amount': ingredient[1]}
                     ingredient_list.append(dict_ingredient) 
@@ -68,8 +77,8 @@ def recipe_search(*ingredient_name_args:str) -> List[dict]:
                 # 手順を抽出
                 proc_list = []
                 sql = """SELECT step_num, step 
-                       FROM process
-                       WHERE recipe_id = %s"""
+                    FROM process
+                    WHERE recipe_id = %s"""
                 # 実行処理
                 cursor.execute(sql, (recipe_id,))
                 for process in cursor:
@@ -86,3 +95,22 @@ def recipe_search(*ingredient_name_args:str) -> List[dict]:
                 recipe_data_list.append(recipe_data)
                 
             return recipe_data_list
+
+def group_extraction(group:List[tuple], ingredients:tuple[str])->bool:
+    """指定の材料が全て存在するか判定
+
+    Args:
+        group (List[tuple]): _description_
+        ingredients (tuple[str]): _description_
+
+    Returns:
+        bool: _description_
+    """
+    judge_list = []
+    for ingredient in ingredients:
+        bool_list = []
+        for item in group:
+            bool_list.append(ingredient in item[3])
+        judge_list.append(any(bool_list))                              
+    return  all(judge_list)
+  
