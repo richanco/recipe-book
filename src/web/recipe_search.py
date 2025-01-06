@@ -27,6 +27,7 @@ def recipe_search(*ingredient_name_args:str) -> List[dict]:
                         recipe.id,
                         recipe.menu,
                         recipe.img_url,
+                        recipe.url,
                         ingredient.name
                         FROM recipe
                         INNER JOIN ingredient
@@ -55,13 +56,14 @@ def recipe_search(*ingredient_name_args:str) -> List[dict]:
             recipe_data_list = []
             
             for recipe in recipe_list:
-                
                 # レシピID取得
                 recipe_id   = recipe[0]
                 # レシピ名取得
                 recipe_menu = recipe[1]
-                # レシピURL取得
+                # レシピ画像のURL取得
                 img_url = recipe[2]
+                # レシピサイトのURL取得
+                url = recipe[3]
                                 
                 # 材料の抽出
                 ingredient_list = []
@@ -89,11 +91,11 @@ def recipe_search(*ingredient_name_args:str) -> List[dict]:
                 recipe_data = {
                     'menu': recipe_menu,
                     'img_url': img_url,
+                    'recipe_url': url,
                     'ingredients': ingredient_list,
                     'processes' : proc_list
                 }
-                recipe_data_list.append(recipe_data)
-                
+                recipe_data_list.append(recipe_data) 
             return recipe_data_list
 
 def group_extraction(group:List[tuple], ingredients:tuple[str])->bool:
@@ -110,7 +112,7 @@ def group_extraction(group:List[tuple], ingredients:tuple[str])->bool:
     for ingredient in ingredients:
         bool_list = []
         for item in group:
-            bool_list.append(ingredient in item[3])
+            bool_list.append(ingredient in item[4])
         judge_list.append(any(bool_list))                              
     return  all(judge_list)
   
