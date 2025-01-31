@@ -2,6 +2,7 @@ import psycopg2
 import os
 from typing import List
 from itertools import groupby
+from common import config 
 
 def recipe_search(*ingredient_name_args:str) -> List[dict]:
     """材料名からレシピデータを抽出する
@@ -14,7 +15,8 @@ def recipe_search(*ingredient_name_args:str) -> List[dict]:
         List[dict]: _description_
     """    
     # データベースに接続
-    con = psycopg2.connect(os.getenv("DB_PARAM"))
+    db_param = config.LOCAL_DBPARAM if config.ENV == 'local' else config.DBPARAM
+    con = psycopg2.connect(db_param) 
         
     with con:
         with con.cursor() as cursor:
@@ -51,7 +53,7 @@ def recipe_search(*ingredient_name_args:str) -> List[dict]:
                 group_list = list(group)
                 if group_extraction(group_list, ingredient_name_args):
                     recipe_list.append(group_list[0])
-                
+            
             # 検索する材料数以上を含む                      
             recipe_data_list = []
             

@@ -36,8 +36,9 @@ def main():
 
         # 認証状態を確認（例: ログイン後のページに移動）
         page.goto("https://cookpad.com/jp")
-        print("認証済み状態を確認しました。ブラウザを閉じます。")
+        print("認証済み状態を確認しました。")
         
+        print("データ収集開始します。")
         # 保存済みボタンをClick
         page.get_by_role("link", name="保存済み", exact=True).click(force=True)
         page.wait_for_url("https://cookpad.com/jp/me/library_items?sources=saved") # 画面が遷移するまで待つ処理を入れる
@@ -45,11 +46,13 @@ def main():
         # Cookpadの保存済みレシピのURL取得
         cookpad_crawler = RecipeCrawler()
         recipe_list = cookpad_crawler.get_saved_list(page)
+        print("データ収集完了しました。")
         
+        print("データペースに登録します。")
         # DBに接続
-        # con = psycopg2.connect(config.DBPARAM)
-        # DBに接続
-        con = psycopg2.connect(config.LOCAL_DBPARAM)
+        db_param = config.LOCAL_DBPARAM if config.ENV == 'local' else config.DBPARAM
+        con = psycopg2.connect(db_param) 
+    
         with con:        
             for recipe in recipe_list:
                 recipe_detail = cookpad_crawler.set_recipe_detail(recipe)
@@ -58,6 +61,7 @@ def main():
                 recipe_dao.insert_recipe(recipe_detail)
         con.close()
         
+        print("データペース登録完了しました。")
         # ブラウザを閉じる
         browser_context.close()
 
